@@ -4,6 +4,9 @@
 
 # @jgrimard/homebridge-vivint
 
+[![npm](https://img.shields.io/npm/v/@jgrimard/homebridge-vivint)](https://www.npmjs.com/package/@jgrimard/homebridge-vivint)
+[![npm downloads](https://img.shields.io/npm/dt/@jgrimard/homebridge-vivint)](https://www.npmjs.com/package/@jgrimard/homebridge-vivint)
+
 Homebridge plugin for [Vivint Smart Home](https://www.vivint.com). This is a fork of
 [@balansse/homebridge-vivint](https://github.com/balansse/homebridge-vivint), rewritten in TypeScript
 on the official [Homebridge plugin template](https://github.com/homebridge/homebridge-plugin-template)
