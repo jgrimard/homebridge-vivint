@@ -2,7 +2,7 @@
   "name": "@jgrimard/homebridge-vivint",
   "displayName": "Homebridge Vivint",
   "type": "module",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Homebridge plugin for Vivint Smart Home security systems and devices.",
   "license": "Apache-2.0",
   "author": "Jason Grimard",
