@@ -1,115 +1,107 @@
-<SPAN ALIGN="CENTER">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/homebridge/branding/latest/logos/homebridge-color-round-stylized.png" width="120">
+</p>
 
-[![homebridge-vivint: Native HomeKit support for Vivint](https://raw.githubusercontent.com/balansse/homebridge-vivint/master/homebridge-vivint.svg)](https://github.com/balansse/homebridge-vivint)
+# @jgrimard/homebridge-vivint
 
-# Homebridge Vivint
+Homebridge plugin for [Vivint Smart Home](https://www.vivint.com). This is a fork of
+[@balansse/homebridge-vivint](https://github.com/balansse/homebridge-vivint), rewritten in TypeScript
+on the official [Homebridge plugin template](https://github.com/homebridge/homebridge-plugin-template)
+and fully compatible with **Homebridge 1.8+ and 2.x**. The goal is to contribute these changes back
+upstream; this fork is published so the rewrite can be used in the meantime. Accessory UUIDs and device
+identities are kept compatible with the original plugin, so existing rooms, names, and automations are
+preserved when switching between the two.
 
-[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins) [![npm](https://badgen.net/npm/v/@balansse/homebridge-vivint) ![npm](https://badgen.net/npm/dt/@balansse/homebridge-vivint)](https://www.npmjs.com/package/@balansse/homebridge-vivint) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=6NDY338ETGK4Q&currency_code=USD&source=url)
+## Features
 
-## HomeKit support for Vivint system using [Homebridge](https://homebridge.io).
-</SPAN>
+Exposes the following Vivint devices to HomeKit:
 
-## Overview
+- **Security panel** (arm home / arm away / disarm, alarm state)
+- **Door locks** (including jammed detection)
+- **Garage door openers**
+- **Cameras and doorbell cameras** (live video via the panel's local RTSP streams, doorbell press
+  notifications, person-detected motion events, plus a contact sensor mirroring the doorbell button
+  for use in automations)
+- **Contact, motion, smoke, CO, glass-break, tilt and flood sensors** (with battery and tamper status)
+- **Thermostats** (mode, target temperature, thresholds, humidity, fan)
+- **Z-Wave switches, dimmers and Philips Hue light groups** bridged through the panel
 
-This is a fork of [homebridge-vivint](https://github.com/timcharper/homebridge-vivint) plugin for [homebridge](https://github.com/nfarina/homebridge).
-It allows to use your Vivint SmartHome products in Apple Homekit. The main changes in this fork include:
-  * Support to Multi Factor Authentication
-  * More devices are supported
-  * Increased stability of notifications
-  * Support for camera streaming
-  * Ignore list for specific device types (useful in case of external integrations like Nest or MyQ that may be managed directly by another plugin) 
-  * Dynamic accessory cache management - any accessories that are no longer managed by the plugin or are disconnected from Vivint system would be removed from the cache automatically
-  * Homebridge Config UI X Web UI settings support
+Device updates arrive in near-realtime over Vivint's push event stream, backed by periodic polling.
 
-Homebridge-Vivint was initially written by a former Vivint employee, Tim Harper. This project is not officially endorsed, sponsored, or affiliated with Vivint SmartHome in any way.
+## Installation
 
-## Usage
-
-This plugin supports installation and changing settings (for `config.js`) via the popular [Config UI X plugin](https://github.com/oznu/homebridge-config-ui-x) (recommended for easiest usage).
-
-After entering your name and password (and possibly a MFA code) in the Plugin Settings a Vivint Refresh Token will be automatically poplulated.  Depending on your Vivint user settings, your MFA code may come from your authenticator app or it will be sent to you via SMS or email.  When done, click Save then Restart Homebridge to connect.
-
-Ensure you are running Node v10.17.0 or higher (this version is required by Homebridge v1.0.0). You can check by using `node -v`.
-
-Either install and configure using Config UI X or you can manually install the plugin by running:
-
-```
-npm install -g @balansse/homebridge-vivint
-```
-
-Then, add the following configuration to the `platforms` array in your Homebridge `config.json`.
-
-If needed, you can manually generate a refresh token by running `npm run mfa` in the command line.
+Install through the Homebridge UI (search for `@jgrimard/homebridge-vivint`), or manually:
 
 ```
-{
-    {
-      "platform": "Vivint",
-      "refreshToken": "your-vivint-refresh-token"
-    }
-}
+npm install -g @jgrimard/homebridge-vivint
 ```
-
-That's it! The plugin will automatically load all supported Vivint devices into Homebridge.
-
-### HOOBS Users:
-
-Unfortunately HOOBS doesn't support the Custom UI components created for Homebridge.
-
-As a workaround, you can open a terminal in HOOBS and run the following commands, where "vivintbridge" is the name of the bridge but all lowercase and with no spaces:
-
-```
-cd /var/lib/hoobs/vivintbridge/node_modules/@balansse/homebridge-vivint
-npm run mfa
-```
-
-## Supported Items
-
-Currently, the following items are supported:
-
-* Locks
-* Contact sensors
-* Thermostat
-* Motion sensors
-* Garage Door Opener
-* Alarm Panel (arm home/away, disarm)
-* Cameras & Doorbells
-* Tilt sensors
-* Fire alert sensors
-* Glass break sensors
-* Smoke detectors
-* Carbon monoxide sensors
-* Heat / Freeze sensors
-* Z-Wave switches (binary and dimmer) that are paired with the Vivint panel. Be sure they are labeled "light" or "fan" if they control those respective devices.
-
-As I do not have access to all varieties of hardware that is supported by Vivint, some incompatibilities might happen. If you notice any weird behavior or your Vivint device is not supported, please submit an issue with your homebridge.log file attached.
 
 ## Configuration
 
-Configuration of the plugin is simple. The Vivint plugin is a dynamic platform which caches the accessories registered.
+### Sign in with the plugin settings UI (recommended)
 
-Configuration sample:
+Vivint accounts use multi-factor authentication (MFA). Open the plugin's settings in the Homebridge UI
+and use the built-in sign-in form:
 
-    {
-      "platform": "Vivint",
-      "refreshToken": "your-vivint-refresh-token",
-      "ignoreDeviceTypes": ["thermostat_device", "garage_door_device"]
-    }
+1. Enter your Vivint email and password. They are sent directly to Vivint and are never stored or logged.
+2. Enter the verification code Vivint sends you (or the code from your authenticator app).
+3. The resulting long-lived *refresh token* is saved to the plugin config automatically.
+4. Restart Homebridge.
 
-A general recommendation: consider creating and using a new Vivint account named "Apple Home". This way, your Vivint logs will show "the front door was unlocked by Apple Home", etc.
+If you cannot use the UI, the same flow is available on the command line from the plugin folder:
+`npm run mfa`.
 
-Configuration options overview:
+### Options
 
-* **refreshToken** - Your Vivint refresh token.  This will be generated after entering your Vivint user name and password in the Config UI X plugin.
-* **apiLoginRefreshSecs** - How often should Vivint Homebridge renew the session token? The token that Vivint provides when authenticating will expire. Also, when this renewal occurs, the plugin requests another snapshot. The event stream can sometimes fail to report device state appropriately and events can come out of order with the snapshot, or updates can be missed entirely. The occasional snapshot retrieval will auto-correct any such errors. Avoid setting this any more frequent that 10 minutes.
-* **motionDetectedOccupancySensorMins** - Homebridge-Vivint will create occupancy sensors for motion sensors that will stay active for X minutes after a motion event is detected. This value configures for how long that occupancy sensor will stay active if no further motion events are detected. Note: Vivint's reporting of motion events over the event stream can be a little inconsistent, at times. As a recommendation, don't plan on creating Homekit automations that respond to Vivint motion events.
-* **ignoreDeviceTypes** - The array containing the device types that should be ignored. Allowed types: "thermostat_device", "door_lock_device", "garage_door_device", "camera_device", "wireless_sensor". "phillips_hue_bridge_device", "multilevel_switch_device". Could also be used to ignore individual devices by ID or Equipment Code.
-* **logDeviceList** - If checked, shows data for all configured Vivint devices in the log.
-* **disableCameras** - If checked, camera video feeds would not appear in Homebridge.
-* **useExternalVideoStreams** - Stream camera feeds from Vivint servers instead of streaming directly from the Panel.
-* **showCameraConfig** - Log [homebridge-camera-ffmpeg](https://github.com/Sunoo/homebridge-camera-ffmpeg) configuration for all detected cameras.
+| Option | Default | Description |
+| --- | --- | --- |
+| `refreshToken` | — | Vivint session token, generated by the sign-in UI. |
+| `apiLoginRefreshSecs` | `1200` | How often the session is renewed. Device state is polled at 1/20th of this interval (60 s by default). Minimum 300. |
+| `ignoreDeviceTypes` | `[]` | Device types, equipment codes or device IDs to skip (e.g. `thermostat_device` if Nest is managed by another plugin). |
+| `logDeviceList` | `false` | Log all managed devices at startup. |
+| `disableCameras` | `false` | Do not expose camera video feeds. |
+| `useExternalVideoStreams` | `false` | Stream video via Vivint's servers instead of directly from the panel on the LAN. |
+| `showCameraConfig` | `false` | Log camera/ffmpeg configuration at startup (credentials are redacted). |
+| `lowBatteryLevel` | — | Battery % at or below which devices report low battery; if unset, the device's own flag is used. |
+| `motionDetectedOccupancySensorMins` | `0` | If > 0, motion sensors also expose an occupancy sensor that stays triggered this many minutes after motion. |
+
+Example `config.json` platform block:
+
+```json
+{
+  "platform": "Vivint",
+  "name": "Vivint",
+  "refreshToken": "s=...",
+  "apiLoginRefreshSecs": 1200
+}
+```
+
+## Reliability & API etiquette
+
+- The plugin never retries failed requests in tight loops. Connection failures use exponential backoff
+  with jitter, and HTTP 403/429/503 responses (Cloudflare throttling) trigger much longer backoff to
+  avoid extended blocks.
+- Local network or Vivint outages are handled gracefully: the plugin keeps running, logs a single
+  warning, and recovers automatically when connectivity returns.
+- An invalid/expired token is reported with clear instructions instead of endless retries.
+- Session cookies, passwords, and RTSP credentials are never written to the log.
+
+## Development
+
+```
+npm install
+npm run build     # compile plugin + custom UI, copy assets to dist/
+npm run lint
+npm test
+npm run watch     # rebuild + restart a local homebridge instance on changes
+```
 
 ## Credits
 
- * @timcharper - https://github.com/timcharper/homebridge-vivint - The original creator of the homebridge-vivint plugin
- * @dgreif - https://github.com/dgreif/ring - The base for vivint-homebridge custom UI for entering login and MFA codes.
+Based on the original work by [Alexandr Balan (balansse)](https://github.com/balansse/homebridge-vivint)
+and [Tim Harper](https://github.com/timcharper), and all contributors to the original plugin.
+
+## Disclaimer
+
+This plugin is not affiliated with or endorsed by Vivint. Use at your own risk; do not rely on HomeKit
+as the sole interface for a life-safety system.

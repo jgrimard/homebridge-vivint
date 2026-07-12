@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "homebridge-ui",
+    "outDir": "dist/homebridge-ui"
+  },
+  "include": [
+    "homebridge-ui/server.ts"
+  ]
+}

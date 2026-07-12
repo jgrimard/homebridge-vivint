@@ -1,7 +1,8 @@
-node_modules
-persist/
-*.tgz
-scratch
-dist
-build
-.vscode
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# reference clones used during the rewrite
+homebridge-vivint-original/
+template-reference/
