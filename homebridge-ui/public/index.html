@@ -1,0 +1,138 @@
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Vivint Account</h5>
+
+    <div id="tokenStatus" class="alert alert-secondary" role="alert" style="display: none;"></div>
+
+    <!-- Step 1: email + password -->
+    <form id="loginForm" style="display: none;">
+      <p class="card-text">
+        Sign in with your Vivint account to link it to Homebridge.
+        If your account uses multi-factor authentication, you will be asked for the verification code next.
+        Your email and password are sent directly to Vivint and are not stored.
+      </p>
+      <div class="form-group">
+        <label for="email">Vivint Email</label>
+        <input type="email" class="form-control" id="email" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Vivint Password</label>
+        <input type="password" class="form-control" id="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" id="loginButton">Sign In</button>
+    </form>
+
+    <!-- Step 2: MFA code -->
+    <form id="mfaForm" style="display: none;">
+      <p class="card-text">
+        Enter the verification code from your text message, email, or authenticator app.
+      </p>
+      <div class="form-group">
+        <label for="mfaCode">Verification Code</label>
+        <input type="text" class="form-control" id="mfaCode" inputmode="numeric" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="btn btn-primary" id="mfaButton">Verify</button>
+      <button type="button" class="btn btn-secondary" id="mfaCancelButton">Start Over</button>
+    </form>
+
+    <!-- Shown when a token is already configured -->
+    <div id="signedInActions" style="display: none;">
+      <button type="button" class="btn btn-secondary" id="reauthButton">Sign In Again / Replace Token</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (async () => {
+    const $ = (id) => document.getElementById(id);
+    const show = (el, visible) => { el.style.display = visible ? '' : 'none'; };
+
+    let pluginConfig = await homebridge.getPluginConfig();
+    if (!pluginConfig.length) {
+      pluginConfig = [{ platform: 'Vivint', name: 'Vivint' }];
+      await homebridge.updatePluginConfig(pluginConfig);
+    }
+
+    // Render the standard settings (refresh interval, ignored devices, camera
+    // options, ...) from config.schema.json below this custom pane.
+    homebridge.showSchemaForm();
+
+    const refreshView = () => {
+      const hasToken = Boolean(pluginConfig[0].refreshToken);
+      const status = $('tokenStatus');
+      show(status, true);
+      if (hasToken) {
+        status.className = 'alert alert-success';
+        status.textContent = 'A Vivint refresh token is configured. You are all set unless the plugin reports authentication errors.';
+      } else {
+        status.className = 'alert alert-warning';
+        status.textContent = 'No Vivint refresh token is configured yet. Sign in below to generate one.';
+      }
+      show($('loginForm'), !hasToken);
+      show($('signedInActions'), hasToken);
+      show($('mfaForm'), false);
+    };
+
+    const saveToken = async (refreshToken) => {
+      pluginConfig[0].refreshToken = refreshToken;
+      await homebridge.updatePluginConfig(pluginConfig);
+      await homebridge.savePluginConfig();
+      homebridge.toast.success('Vivint account linked. Restart Homebridge (or the child bridge) to apply.', 'Success');
+      refreshView();
+    };
+
+    $('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = $('loginButton');
+      button.disabled = true;
+      homebridge.showSpinner();
+      try {
+        const response = await homebridge.request('/login', {
+          username: $('email').value,
+          password: $('password').value,
+        });
+        if (response.requiresMfa) {
+          show($('loginForm'), false);
+          show($('mfaForm'), true);
+          $('mfaCode').focus();
+          homebridge.toast.info('Vivint sent you a verification code.', 'Verification Required');
+        } else {
+          await saveToken(response.refreshToken);
+        }
+      } catch (error) {
+        homebridge.toast.error(error.message || 'Sign-in failed.', 'Error');
+      } finally {
+        homebridge.hideSpinner();
+        button.disabled = false;
+      }
+    });
+
+    $('mfaForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = $('mfaButton');
+      button.disabled = true;
+      homebridge.showSpinner();
+      try {
+        const response = await homebridge.request('/verify-code', { code: $('mfaCode').value });
+        await saveToken(response.refreshToken);
+      } catch (error) {
+        homebridge.toast.error(error.message || 'Verification failed.', 'Error');
+      } finally {
+        homebridge.hideSpinner();
+        button.disabled = false;
+      }
+    });
+
+    $('mfaCancelButton').addEventListener('click', () => {
+      $('mfaCode').value = '';
+      refreshView();
+    });
+
+    $('reauthButton').addEventListener('click', () => {
+      show($('signedInActions'), false);
+      show($('loginForm'), true);
+    });
+
+    refreshView();
+  })();
+</script>

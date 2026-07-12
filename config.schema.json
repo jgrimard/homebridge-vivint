@@ -1,74 +1,90 @@
 {
-    "pluginAlias": "Vivint",
-    "pluginType": "platform",
-    "singular": true,
-    "customUi": true,
-    "customUiPath": "./dist/homebridge-ui",
-    "schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-            "title": "Name",
-            "type": "string",
-            "default": "Vivint",
-            "minLength": 1,
-            "required": true
+  "pluginAlias": "Vivint",
+  "pluginType": "platform",
+  "singular": true,
+  "customUi": true,
+  "customUiPath": "./dist/homebridge-ui",
+  "headerDisplay": "Use the settings UI above to sign in to your Vivint account (including multi-factor authentication) and obtain a refresh token automatically.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Vivint",
+        "minLength": 1,
+        "required": true
       },
-        "refreshToken": {
-            "type": "string",
-            "title": "Vivint Refresh Token",
-            "default": "",
-            "required": true
-        },
-        "apiLoginRefreshSecs": {
-            "type": "integer",
-            "title": "API Refresh",
-            "description": "How often should Vivint Homebridge renew the session token.",
-            "default": 1200
-        },
-        "ignoreDeviceTypes": {
-          "title": "Ignore Devices",
-          "description": "Selected device types / equipment codes / IDs would be ignored on startup. Useful in case of external integrations like Nest or MyQ that may be managed directly by another Homebridge plugin.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "title": "Device Type / Equipment Code / ID",
-            "type": "string",
-            "typeahead": {
-              "source": [
-                "thermostat_device",
-                "door_lock_device",
-                "garage_door_device",
-                "camera_device",
-                "wireless_sensor",
-                "phillips_hue_bridge_device",
-                "multilevel_switch_device"
-              ]
-            }
+      "refreshToken": {
+        "title": "Vivint Refresh Token",
+        "type": "string",
+        "description": "Session token obtained by signing in through the plugin settings UI (or 'npm run mfa').",
+        "required": true
+      },
+      "apiLoginRefreshSecs": {
+        "title": "API Session Refresh (seconds)",
+        "type": "integer",
+        "description": "How often the plugin renews its Vivint session. Device state is polled at 1/20th of this interval. Lower values increase API traffic and the risk of being rate limited.",
+        "default": 1200,
+        "minimum": 300,
+        "maximum": 86400
+      },
+      "ignoreDeviceTypes": {
+        "title": "Ignore Devices",
+        "description": "Selected device types / equipment codes / IDs are ignored on startup. Useful for external integrations like Nest or MyQ that are managed directly by another Homebridge plugin.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "title": "Device Type / Equipment Code / ID",
+          "type": "string",
+          "typeahead": {
+            "source": [
+              "thermostat_device",
+              "door_lock_device",
+              "garage_door_device",
+              "camera_device",
+              "wireless_sensor",
+              "phillips_hue_bridge_device",
+              "multilevel_switch_device"
+            ]
           }
-        },
-        "logDeviceList": {
-          "title": "Show device list",
-          "description": "Shows data for all configured Vivint devices in the log",
-          "type": "boolean"
-        },
-        "disableCameras": {
-          "title": "Disable cameras",
-          "description": "If checked, camera video feeds would not appear in Homebridge.",
-          "type": "boolean"
-        },
-        "useExternalVideoStreams": {
-          "title": "Use external video streams",
-          "description": "Stream camera feeds from Vivint servers instead of streaming directly from the Panel.",
-          "type": "boolean"
-        },
-        "showCameraConfig": {
-          "title": "Show camera config",
-          "description": "Shows configuration for all detected cameras in the log",
-          "type": "boolean"
         }
+      },
+      "logDeviceList": {
+        "title": "Show device list",
+        "description": "Logs data for all configured Vivint devices at startup.",
+        "type": "boolean"
+      },
+      "disableCameras": {
+        "title": "Disable cameras",
+        "description": "If checked, camera video feeds will not appear in Homebridge.",
+        "type": "boolean"
+      },
+      "useExternalVideoStreams": {
+        "title": "Use external video streams",
+        "description": "Stream camera feeds from Vivint servers instead of streaming directly from the panel on the local network.",
+        "type": "boolean"
+      },
+      "showCameraConfig": {
+        "title": "Show camera config",
+        "description": "Logs configuration for all detected cameras (RTSP credentials are redacted).",
+        "type": "boolean"
+      },
+      "lowBatteryLevel": {
+        "title": "Low battery level (%)",
+        "type": "integer",
+        "description": "Battery percentage at or below which a device reports a low battery. If unset, the device's own low battery flag is used.",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "motionDetectedOccupancySensorMins": {
+        "title": "Occupancy sensor timeout (minutes)",
+        "type": "integer",
+        "description": "If greater than 0, each motion sensor also exposes an occupancy sensor that stays triggered for this many minutes after motion.",
+        "minimum": 0
       }
-    },
-    "form": null,
-    "display": null
-  }
+    }
+  },
+  "form": null,
+  "display": null
+}

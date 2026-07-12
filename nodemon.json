@@ -1,0 +1,13 @@
+{
+  "watch": [
+    "src",
+    "homebridge-ui"
+  ],
+  "ext": "ts",
+  "ignore": [],
+  "signal": "SIGTERM",
+  "env": {
+    "NODE_OPTIONS": "--trace-warnings"
+  },
+  "exec": "npm run build && homebridge -I -D"
+}
