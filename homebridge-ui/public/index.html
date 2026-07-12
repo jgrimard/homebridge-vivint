@@ -87,9 +87,16 @@
     const saveToken = async (refreshToken) => {
       pluginConfig[0].refreshToken = refreshToken;
       await homebridge.updatePluginConfig(pluginConfig);
-      await homebridge.savePluginConfig();
-      homebridge.toast.success('Vivint account linked. Restart Homebridge (or the child bridge) to apply.', 'Success');
+      // Deliberately NOT calling homebridge.savePluginConfig() here: on
+      // config-ui-x v5 the parent passes its save promise straight into
+      // postMessage, which throws DataCloneError and never answers, leaving
+      // the spinner up forever. The modal's own Save button uses the working
+      // code path (and offers the restart prompt), so send the user there.
       refreshView();
+      const status = $('tokenStatus');
+      status.className = 'alert alert-success';
+      status.textContent = 'Vivint account linked! Now click Save below, then restart Homebridge to apply.';
+      homebridge.toast.success('Click Save below, then restart Homebridge.', 'Vivint Account Linked');
     };
 
     $('loginForm').addEventListener('submit', async (event) => {
