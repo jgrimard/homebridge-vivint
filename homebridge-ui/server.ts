@@ -10,6 +10,15 @@ import { HomebridgePluginUiServer, RequestError } from '@homebridge/plugin-ui-ut
  * spawned by the Homebridge UI and does not load the plugin itself.
  */
 
+// Diagnostics: these land in the Homebridge log prefixed with the plugin
+// name. Never log tokens, cookies, or credentials here.
+process.on('uncaughtException', (error) => {
+  console.error('Vivint UI server uncaught exception:', error);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Vivint UI server unhandled rejection:', reason);
+});
+
 const VIVINT_LOGIN_URL = 'https://www.vivintsky.com/api/login';
 const VIVINT_AUTHUSER_URL = 'https://www.vivintsky.com/api/authuser';
 const VIVINT_MFA_URL = 'https://www.vivintsky.com/platform-user-api/v0/platformusers/2fa/validate';
@@ -21,10 +30,15 @@ function extractSessionCookie(response: Response): string | undefined {
 }
 
 async function vivintFetch(url: string, init: RequestInit): Promise<Response> {
+  const step = new URL(url).pathname;
   try {
-    return await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    console.log(`Vivint UI: requesting ${step} ...`);
+    const response = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    console.log(`Vivint UI: ${step} responded with HTTP ${response.status}`);
+    return response;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
+    console.error(`Vivint UI: ${step} failed: ${reason}`);
     throw new RequestError(`Could not reach Vivint (${reason}). Check your internet connection and try again.`, {});
   }
 }
@@ -93,6 +107,7 @@ class VivintUiServer extends HomebridgePluginUiServer {
     }
 
     if (authResponse.status === 401) {
+      console.log('Vivint UI: sign-in ok, MFA verification required');
       return { requiresMfa: true };
     }
     if (!authResponse.ok) {
@@ -130,6 +145,7 @@ class VivintUiServer extends HomebridgePluginUiServer {
       this.pendingToken = rotatedCookie;
     }
 
+    console.log('Vivint UI: MFA verification succeeded');
     const token = this.pendingToken;
     this.pendingToken = '';
     return { refreshToken: token };

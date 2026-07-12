@@ -47,6 +47,17 @@
     const $ = (id) => document.getElementById(id);
     const show = (el, visible) => { el.style.display = visible ? '' : 'none'; };
 
+    // homebridge.request() has no timeout: if the plugin's UI server process
+    // dies, the promise never settles and the spinner runs forever. Cap it so
+    // the user gets an actionable error instead.
+    const request = (path, body) => Promise.race([
+      homebridge.request(path, body),
+      new Promise((resolve, reject) => setTimeout(
+        () => reject(new Error('The plugin UI server did not respond within 45 seconds. Check the Homebridge log for errors mentioning homebridge-vivint, then close and reopen this settings window to try again.')),
+        45000,
+      )),
+    ]);
+
     let pluginConfig = await homebridge.getPluginConfig();
     if (!pluginConfig.length) {
       pluginConfig = [{ platform: 'Vivint', name: 'Vivint' }];
@@ -87,7 +98,7 @@
       button.disabled = true;
       homebridge.showSpinner();
       try {
-        const response = await homebridge.request('/login', {
+        const response = await request('/login', {
           username: $('email').value,
           password: $('password').value,
         });
@@ -113,7 +124,7 @@
       button.disabled = true;
       homebridge.showSpinner();
       try {
-        const response = await homebridge.request('/verify-code', { code: $('mfaCode').value });
+        const response = await request('/verify-code', { code: $('mfaCode').value });
         await saveToken(response.refreshToken);
       } catch (error) {
         homebridge.toast.error(error.message || 'Verification failed.', 'Error');
