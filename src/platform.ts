@@ -89,7 +89,11 @@ export class VivintPlatform implements DynamicPlatformPlugin {
   }
 
   private get apiLoginRefreshSecs(): number {
-    const configured = this.config.apiLoginRefreshSecs ?? DEFAULT_API_LOGIN_REFRESH_SECS;
+    const configured = Number(this.config.apiLoginRefreshSecs ?? DEFAULT_API_LOGIN_REFRESH_SECS);
+    if (!Number.isFinite(configured)) {
+      this.log.warn(`apiLoginRefreshSecs of ${JSON.stringify(this.config.apiLoginRefreshSecs)} is not a number; using ${DEFAULT_API_LOGIN_REFRESH_SECS}s.`);
+      return DEFAULT_API_LOGIN_REFRESH_SECS;
+    }
     if (configured < MIN_API_LOGIN_REFRESH_SECS) {
       this.log.warn(`apiLoginRefreshSecs of ${configured}s is too aggressive and risks Vivint rate limiting; using ${MIN_API_LOGIN_REFRESH_SECS}s.`);
       return MIN_API_LOGIN_REFRESH_SECS;

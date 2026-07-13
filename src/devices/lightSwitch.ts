@@ -40,7 +40,7 @@ export class LightSwitch extends VivintDevice {
 
   override notify(): void {
     super.notify();
-    this.service.updateCharacteristic(this.Characteristic.On, this.data.Value !== 0);
+    this.service.updateCharacteristic(this.Characteristic.On, Boolean(this.data.Status));
   }
 
   static override appliesTo(data: DeviceData): boolean {

@@ -2,7 +2,7 @@
   "name": "@jgrimard/homebridge-vivint",
   "displayName": "Homebridge Vivint",
   "type": "module",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Homebridge plugin for Vivint Smart Home security systems and devices.",
   "license": "Apache-2.0",
   "author": "Jason Grimard",
@@ -39,6 +39,7 @@
   "scripts": {
     "build": "rimraf ./dist && tsc && tsc -p tsconfig.ui.json && node scripts/copy-assets.js",
     "lint": "eslint . --max-warnings=0",
+    "pretest": "npm run build",
     "test": "node --test \"test/*.test.js\"",
     "mfa": "node scripts/vivint-mfa-cli.js",
     "prepublishOnly": "npm run lint && npm run build",
