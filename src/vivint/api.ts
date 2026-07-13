@@ -231,12 +231,15 @@ export class VivintApiClient {
 
     const response = await this.rawRequest('/authuser', { method: 'GET' });
 
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
       throw new VivintAuthError(
         'Vivint rejected the saved session token. Open the plugin settings UI and sign in again to obtain a new token.',
         response.status,
       );
     }
+    // 403 falls through to errorFromResponse, which classifies it as
+    // Cloudflare throttling/blocking so retries back off instead of
+    // prompting the user to sign in again.
     if (!response.ok) {
       throw await this.errorFromResponse(response, 'authentication');
     }
